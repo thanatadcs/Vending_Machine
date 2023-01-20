@@ -73,7 +73,7 @@ def create_product():
 @app.route('/product', methods=['PUT'])
 def update_product():
     data: dict = request.get_json()
-    required_fields = set(['name', 'price', 'quantity', 'vending_machine_id'])
+    required_fields = set(['id', 'name', 'price', 'quantity', 'vending_machine_id'])
     if not data or not (required_fields <= data.keys()):
         return make_response(jsonify({'status': 'Bad Request'}), 400)
     id, name, price, quantity, vm_id = \
