@@ -60,7 +60,21 @@ def create_product():
         return make_response(jsonify({'status': 'Bad Request'}), 400)
     name, price, quantity, vm_id = \
         data.get('name'), data.get('price'), data.get('quantity'), data.get('vending_machine_id')
+    if VendingMachine.query.get(vm_id) is None:
+        return make_response(jsonify({'status': 'Bad Request'}), 400)
     new_product = Product(name=name, price=price, quantity=quantity, vending_machine_id=vm_id)
     db.session.add(new_product)
+    db.session.commit()
+    return jsonify({"status": "OK"})
+
+@app.route('/product', methods=['DELETE'])
+def delete_product():
+    data: dict = request.get_json()
+    required_fields = set(['id'])
+    if not data or not (required_fields <= data.keys()):
+        return make_response(jsonify({'status': 'Bad Request'}), 400)
+    id = data.get('id')
+    vending_machine = VendingMachine.query.filter_by(id=id).first()
+    db.session.delete(vending_machine)
     db.session.commit()
     return jsonify({"status": "OK"})
