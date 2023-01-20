@@ -42,6 +42,8 @@ def delete_vending_machine():
         return make_response(jsonify({'status': 'Bad Request'}), 400)
     id = data.get('id')
     vending_machine = VendingMachine.query.filter_by(id=id).first()
+    if vending_machine is None:
+        return make_response(jsonify({'status': 'Bad Request'}), 400)
     db.session.delete(vending_machine)
     db.session.commit()
     return jsonify({"status": "OK"})
@@ -74,7 +76,9 @@ def delete_product():
     if not data or not (required_fields <= data.keys()):
         return make_response(jsonify({'status': 'Bad Request'}), 400)
     id = data.get('id')
-    vending_machine = VendingMachine.query.filter_by(id=id).first()
-    db.session.delete(vending_machine)
+    product = Product.query.filter_by(id=id).first()
+    if product is None:
+        return make_response(jsonify({'status': 'Bad Request'}), 400)
+    db.session.delete(product)
     db.session.commit()
     return jsonify({"status": "OK"})
