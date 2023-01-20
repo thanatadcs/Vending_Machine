@@ -69,6 +69,24 @@ def create_product():
     db.session.commit()
     return jsonify({"status": "OK"})
 
+
+@app.route('/product', methods=['PUT'])
+def update_product():
+    data: dict = request.get_json()
+    required_fields = set(['name', 'price', 'quantity', 'vending_machine_id'])
+    if not data or not (required_fields <= data.keys()):
+        return make_response(jsonify({'status': 'Bad Request'}), 400)
+    id, name, price, quantity, vm_id = \
+        data.get('id'), data.get('name'), data.get('price'), data.get('quantity'), data.get('vending_machine_id')
+    product = Product.query.filter_by(id=id).first()
+    if product is None:
+        return make_response(jsonify({'status': 'bad request'}), 400)
+    product.name, product.price, product.quantity, product.vending_machine_id \
+        = name, price, quantity, vm_id
+    db.session.commit()
+    return jsonify({"status": "OK"})
+
+
 @app.route('/product', methods=['DELETE'])
 def delete_product():
     data: dict = request.get_json()
@@ -78,7 +96,7 @@ def delete_product():
     id = data.get('id')
     product = Product.query.filter_by(id=id).first()
     if product is None:
-        return make_response(jsonify({'status': 'Bad Request'}), 400)
+        return make_response(jsonify({'status': 'bad request'}), 400)
     db.session.delete(product)
     db.session.commit()
     return jsonify({"status": "OK"})

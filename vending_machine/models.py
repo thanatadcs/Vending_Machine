@@ -10,7 +10,8 @@ class Product(db.Model):
     price: float = db.Column(db.Numeric(precision=5, scale=2)) # price cannot exceed 999.99
     quantity: int = db.Column(db.Integer)
     vending_machine_id: int = db.Column(db.Integer, db.ForeignKey('vending_machine.id'), nullable=False)
-    
+
+
 @dataclass
 class VendingMachine(db.Model):
     __tablename__ = 'vending_machine'
