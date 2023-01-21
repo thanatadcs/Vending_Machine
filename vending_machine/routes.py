@@ -73,7 +73,7 @@ def create_product():
 @app.route('/product', methods=['PUT'])
 def update_product():
     data: dict = request.get_json()
-    required_fields = set(['id', 'name', 'price', 'quantity', 'vending_machine_id'])
+    required_fields = set(['id'])
     if not data or not (required_fields <= data.keys()):
         return make_response(jsonify({'status': 'Bad Request'}), 400)
     id, name, price, quantity, vm_id = \
@@ -81,8 +81,10 @@ def update_product():
     product = Product.query.filter_by(id=id).first()
     if product is None:
         return make_response(jsonify({'status': 'bad request'}), 400)
-    product.name, product.price, product.quantity, product.vending_machine_id \
-        = name, price, quantity, vm_id
+    if name is not None: product.name = name
+    if price is not None: product.price = name
+    if quantity is not None: product.quantity = name
+    if vm_id is not None: product.vending_machine_id = name
     db.session.commit()
     return jsonify({"status": "OK"})
 
