@@ -24,13 +24,13 @@ def create_vending_machine():
 @app.route('/vending_machine', methods=['PUT'])
 def update_vending_machine():
     data: dict = request.get_json()
-    required_fields = set(['id', 'name', 'location'])
+    required_fields = set(['id'])
     if not data or not (required_fields <= data.keys()):
         return make_response(jsonify({'status': 'Bad Request'}), 400)
     id, name, location = data.get('id'), data.get('name'), data.get('location')
     vending_machine = VendingMachine.query.filter_by(id=id).first()
-    vending_machine.name = name
-    vending_machine.location = location
+    if name is not None: vending_machine.name = name
+    if location is not None: vending_machine.location = name
     db.session.commit()
     return jsonify({"status": "OK"})
 
