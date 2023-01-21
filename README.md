@@ -4,6 +4,10 @@
 pip install flask
 pip install flask-sqlalchemy
 ```
+## Run
+```
+flask --app vending_machine run
+```
 ## Check list
 - [X] Should be able to manage (create edit delete) vending machine.
 - [x] There is a stock for each vending machine
