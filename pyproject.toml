@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "vending-machine"
+version = "0.1.0"
+description = "A simple vending machine management backend"
+authors = ["thanatadcs <thanatad.cs@gmail.com>"]
+readme = "README.md"
+packages = [{include = "vending_machine"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+Flask = "^2.2.2"
+flask-sqlalchemy = "^3.0.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

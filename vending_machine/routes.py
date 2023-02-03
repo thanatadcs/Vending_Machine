@@ -3,36 +3,37 @@ from flask import (request, jsonify)
 from flask.helpers import make_response
 from .models import (VendingMachine, Product, db)
 
+
 # Vending machine
 @app.route('/vending_machine')
 def list_vending_machine():
     results = VendingMachine.query.all()
-    return jsonify({"vending_machine":results})
+    return jsonify({"vending_machine": results})
 
-@app.route('/vending_machine', methods=['POST'])
+
+@app.route('/vending_machine', methods=['POST', 'PUT'])
 def create_vending_machine():
+    if request.method not in ['POST', 'PUT']:
+        return make_response(jsonify({'status': 'Bad Request'}), 400)
+
     data: dict = request.get_json()
-    required_fields = set(['name', 'location'])
+    required_fields = {'name', 'location'} if request.method == 'POST' else {'id'}
     if not data or not (required_fields <= data.keys()):
         return make_response(jsonify({'status': 'Bad Request'}), 400)
-    name, location = data.get('name'), data.get('location')
-    new_vending_machine = VendingMachine(name=name, location=location)
-    db.session.add(new_vending_machine)
-    db.session.commit()
+    if request.method == 'POST':
+        # Create vending machine
+        name, location = data.get('name'), data.get('location')
+        new_vending_machine = VendingMachine(name=name, location=location)
+        db.session.add(new_vending_machine)
+    elif request.method == 'PUT':
+        # Update vending machine
+        id, name, location = data.get('id'), data.get('name'), data.get('location')
+        vending_machine = VendingMachine.query.filter_by(id=id).first()
+        if name is not None: vending_machine.name = name
+        if location is not None: vending_machine.location = name
+        db.session.commit()
     return jsonify({"status": "OK"})
 
-@app.route('/vending_machine', methods=['PUT'])
-def update_vending_machine():
-    data: dict = request.get_json()
-    required_fields = set(['id'])
-    if not data or not (required_fields <= data.keys()):
-        return make_response(jsonify({'status': 'Bad Request'}), 400)
-    id, name, location = data.get('id'), data.get('name'), data.get('location')
-    vending_machine = VendingMachine.query.filter_by(id=id).first()
-    if name is not None: vending_machine.name = name
-    if location is not None: vending_machine.location = name
-    db.session.commit()
-    return jsonify({"status": "OK"})
 
 @app.route('/vending_machine', methods=['DELETE'])
 def delete_vending_machine():
@@ -48,11 +49,13 @@ def delete_vending_machine():
     db.session.commit()
     return jsonify({"status": "OK"})
 
+
 # Product
 @app.route('/product')
 def list_product():
     results = Product.query.all()
-    return jsonify({"product":results})
+    return jsonify({"product": results})
+
 
 @app.route('/product', methods=['POST'])
 def create_product():
