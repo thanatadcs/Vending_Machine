@@ -4,6 +4,9 @@ from flask.helpers import make_response
 from .models import (VendingMachine, Product, db)
 
 
+def check_required_fields(actual_fields, required_fields):
+    return not actual_fields or not (required_fields <= actual_fields.keys())
+
 # Vending machine
 @app.route('/vending_machine')
 def list_vending_machine():
@@ -18,8 +21,8 @@ def create_vending_machine():
 
     data: dict = request.get_json()
     required_fields = {'name', 'location'} if request.method == 'POST' else {'id'}
-    if not data or not (required_fields <= data.keys()):
-        return make_response(jsonify({'status': 'Bad Request'}), 400)
+    if check_required_fields(data, required_fields):
+        return make_response(jsonify({'status': 'bad request'}), 400)
     if request.method == 'POST':
         # Create vending machine
         name, location = data.get('name'), data.get('location')
@@ -39,7 +42,7 @@ def create_vending_machine():
 def delete_vending_machine():
     data: dict = request.get_json()
     required_fields = set(['id'])
-    if not data or not (required_fields <= data.keys()):
+    if check_required_fields(data, required_fields):
         return make_response(jsonify({'status': 'Bad Request'}), 400)
     id = data.get('id')
     vending_machine = VendingMachine.query.filter_by(id=id).first()
@@ -61,7 +64,7 @@ def list_product():
 def create_product():
     data: dict = request.get_json()
     required_fields = set(['name', 'price', 'quantity', 'vending_machine_id'])
-    if not data or not (required_fields <= data.keys()):
+    if check_required_fields(data, required_fields):
         return make_response(jsonify({'status': 'Bad Request'}), 400)
     name, price, quantity, vm_id = \
         data.get('name'), data.get('price'), data.get('quantity'), data.get('vending_machine_id')
@@ -77,7 +80,7 @@ def create_product():
 def update_product():
     data: dict = request.get_json()
     required_fields = set(['id'])
-    if not data or not (required_fields <= data.keys()):
+    if check_required_fields(data, required_fields):
         return make_response(jsonify({'status': 'Bad Request'}), 400)
     id, name, price, quantity, vm_id = \
         data.get('id'), data.get('name'), data.get('price'), data.get('quantity'), data.get('vending_machine_id')
@@ -96,7 +99,7 @@ def update_product():
 def delete_product():
     data: dict = request.get_json()
     required_fields = set(['id'])
-    if not data or not (required_fields <= data.keys()):
+    if check_required_fields(data, required_fields):
         return make_response(jsonify({'status': 'Bad Request'}), 400)
     id = data.get('id')
     product = Product.query.filter_by(id=id).first()
