@@ -1,6 +1,8 @@
 from flask import current_app as app
 from flask import (request, jsonify)
 from flask.helpers import make_response
+
+from .models import Product, VendingMachine
 from .vending_machine_utils import (create_vending_machine, update_vending_machine, delete_vending_machine)
 from .product_utils import (create_product, update_product, delete_product)
 
@@ -24,14 +26,12 @@ def modify_vending_machine():
     required_fields_of_requests = {'POST': {'name', 'location'}, 'PUT': {'id'}, 'DELETE': {'id'}}
     data: dict = request.get_json()
     required_fields = required_fields_of_requests[request.method]
+    methods_to_vending_machine_functions_map = {'POST': create_vending_machine, 'PUT': update_vending_machine,
+                                                'DELETE': delete_vending_machine}
     if is_not_valid_field(data, required_fields):
         status, status_code = {'status': 'bad request'}, 400
-    elif request.method == 'POST':  # Create vending machine
-        status, status_code = create_vending_machine(data)
-    elif request.method == 'PUT':  # Update vending machine
-        status, status_code = update_vending_machine(data)
-    elif request.method == 'DELETE':  # Delete vending machine
-        status, status_code = delete_vending_machine(data)
+    else:
+        status, status_code = methods_to_vending_machine_functions_map[request.method]
     return make_response(jsonify(status), status_code)
 
 
@@ -51,12 +51,10 @@ def modify_product():
                                    'DELETE': {'id'}}
     data: dict = request.get_json()
     required_fields = required_fields_of_requests[request.method]
+    methods_to_product_functions_map = {'POST': create_product, 'PUT': update_product,
+                                        'DELETE': delete_product}
     if is_not_valid_field(data, required_fields):
         status, status_code = {'status': 'bad request'}, 400
-    elif request.method == 'POST':
-        status, status_code = create_product(data)
-    elif request.method == 'PUT':
-        status, status_code = update_product(data)
-    elif request.method == 'DELETE':
-        status, status_code = delete_product(data)
+    else:
+        status, status_code = methods_to_product_functions_map[request.method]
     return make_response(jsonify(status), status_code)
