@@ -1,8 +1,8 @@
 from flask import current_app as app
 from flask import (request, jsonify)
 from flask.helpers import make_response
-from .models import (VendingMachine, Product, db)
-from vending_machine_utils import *
+from .vending_machine_utils import (create_vending_machine, update_vending_machine, delete_vending_machine)
+from .product_utils import (create_product, update_product, delete_product)
 
 
 def is_not_valid_field(actual_fields, required_fields):
@@ -42,51 +42,21 @@ def list_product():
     return jsonify({"product": results})
 
 
-@app.route('/product', methods=['POST'])
-def create_product():
+@app.route('/product', methods=['POST', 'PUT', 'DELETE'])
+def modify_product():
+    if request.method not in ['POST', 'PUT', 'DELETE']:
+        return make_response(jsonify({'status': 'Bad Request'}), 400)
+
+    required_fields_of_requests = {'POST': {'name', 'price', 'quantity', 'vending_machine_id'}, 'PUT': {'id'},
+                                   'DELETE': {'id'}}
     data: dict = request.get_json()
-    required_fields = {'name', 'price', 'quantity', 'vending_machine_id'}
+    required_fields = required_fields_of_requests[request.method]
     if is_not_valid_field(data, required_fields):
-        return make_response(jsonify({'status': 'Bad Request'}), 400)
-    name, price, quantity, vm_id = \
-        data.get('name'), data.get('price'), data.get('quantity'), data.get('vending_machine_id')
-    if VendingMachine.query.get(vm_id) is None:
-        return make_response(jsonify({'status': 'Bad Request'}), 400)
-    new_product = Product(name=name, price=price, quantity=quantity, vending_machine_id=vm_id)
-    db.session.add(new_product)
-    db.session.commit()
-    return jsonify({"status": "OK"})
-
-
-@app.route('/product', methods=['PUT'])
-def update_product():
-    data: dict = request.get_json()
-    required_fields = set(['id'])
-    if is_not_valid_field(data, required_fields):
-        return make_response(jsonify({'status': 'Bad Request'}), 400)
-    id, name, price, quantity, vm_id = \
-        data.get('id'), data.get('name'), data.get('price'), data.get('quantity'), data.get('vending_machine_id')
-    product = Product.query.filter_by(id=id).first()
-    if product is None:
-        return make_response(jsonify({'status': 'bad request'}), 400)
-    if name is not None: product.name = name
-    if price is not None: product.price = name
-    if quantity is not None: product.quantity = name
-    if vm_id is not None: product.vending_machine_id = name
-    db.session.commit()
-    return jsonify({"status": "OK"})
-
-
-@app.route('/product', methods=['DELETE'])
-def delete_product():
-    data: dict = request.get_json()
-    required_fields = set(['id'])
-    if is_not_valid_field(data, required_fields):
-        return make_response(jsonify({'status': 'Bad Request'}), 400)
-    id = data.get('id')
-    product = Product.query.filter_by(id=id).first()
-    if product is None:
-        return make_response(jsonify({'status': 'bad request'}), 400)
-    db.session.delete(product)
-    db.session.commit()
-    return jsonify({"status": "OK"})
+        status, status_code = {'status': 'bad request'}, 400
+    elif request.method == 'POST':
+        status, status_code = create_product(data)
+    elif request.method == 'PUT':
+        status, status_code = update_product(data)
+    elif request.method == 'DELETE':
+        status, status_code = delete_product(data)
+    return make_response(jsonify(status), status_code)
