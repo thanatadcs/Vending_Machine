@@ -4,7 +4,7 @@ from flask.helpers import make_response
 from .models import (VendingMachine, Product, db)
 
 
-def check_required_fields(actual_fields, required_fields):
+def is_not_valid_field(actual_fields, required_fields):
     return not actual_fields or not (required_fields <= actual_fields.keys())
 
 
@@ -23,7 +23,7 @@ def modify_vending_machine():
     required_fields_of_requests = {'POST': {'name', 'location'}, 'PUT': {'id'}, 'DELETE': {'id'}}
     data: dict = request.get_json()
     required_fields = required_fields_of_requests[request.method]
-    if check_required_fields(data, required_fields):
+    if is_not_valid_field(data, required_fields):
         status, status_code = {'status': 'bad request'}, 400
     elif request.method == 'POST':  # Create vending machine
         status, status_code = create_vending_machine(data)
@@ -45,6 +45,7 @@ def delete_vending_machine(data):
 
 
 def update_vending_machine(data):
+    print("update")
     id, name, location = data.get('id'), data.get('name'), data.get('location')
     vending_machine = VendingMachine.query.filter_by(id=id).first()
     if vending_machine is None:
@@ -59,6 +60,7 @@ def create_vending_machine(data):
     name, location = data.get('name'), data.get('location')
     new_vending_machine = VendingMachine(name=name, location=location)
     db.session.add(new_vending_machine)
+    db.session.commit()
     return {'status': 'OK'}, 200
 
 
@@ -72,8 +74,8 @@ def list_product():
 @app.route('/product', methods=['POST'])
 def create_product():
     data: dict = request.get_json()
-    required_fields = set(['name', 'price', 'quantity', 'vending_machine_id'])
-    if check_required_fields(data, required_fields):
+    required_fields = {'name', 'price', 'quantity', 'vending_machine_id'}
+    if is_not_valid_field(data, required_fields):
         return make_response(jsonify({'status': 'Bad Request'}), 400)
     name, price, quantity, vm_id = \
         data.get('name'), data.get('price'), data.get('quantity'), data.get('vending_machine_id')
@@ -89,7 +91,7 @@ def create_product():
 def update_product():
     data: dict = request.get_json()
     required_fields = set(['id'])
-    if check_required_fields(data, required_fields):
+    if is_not_valid_field(data, required_fields):
         return make_response(jsonify({'status': 'Bad Request'}), 400)
     id, name, price, quantity, vm_id = \
         data.get('id'), data.get('name'), data.get('price'), data.get('quantity'), data.get('vending_machine_id')
@@ -108,7 +110,7 @@ def update_product():
 def delete_product():
     data: dict = request.get_json()
     required_fields = set(['id'])
-    if check_required_fields(data, required_fields):
+    if is_not_valid_field(data, required_fields):
         return make_response(jsonify({'status': 'Bad Request'}), 400)
     id = data.get('id')
     product = Product.query.filter_by(id=id).first()
