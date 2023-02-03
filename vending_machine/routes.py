@@ -2,6 +2,7 @@ from flask import current_app as app
 from flask import (request, jsonify)
 from flask.helpers import make_response
 from .models import (VendingMachine, Product, db)
+from vending_machine_utils import *
 
 
 def is_not_valid_field(actual_fields, required_fields):
@@ -32,36 +33,6 @@ def modify_vending_machine():
     elif request.method == 'DELETE':  # Delete vending machine
         status, status_code = delete_vending_machine(data)
     return make_response(jsonify(status), status_code)
-
-
-def delete_vending_machine(data):
-    id = data.get('id')
-    vending_machine = VendingMachine.query.filter_by(id=id).first()
-    if vending_machine is None:
-        return {'status': 'Bad Request'}, 400
-    db.session.delete(vending_machine)
-    db.session.commit()
-    return {'status': 'OK'}, 200
-
-
-def update_vending_machine(data):
-    print("update")
-    id, name, location = data.get('id'), data.get('name'), data.get('location')
-    vending_machine = VendingMachine.query.filter_by(id=id).first()
-    if vending_machine is None:
-        return {'status': 'Bad Request'}, 400
-    if name is not None: vending_machine.name = name
-    if location is not None: vending_machine.location = name
-    db.session.commit()
-    return {'status': 'OK'}, 200
-
-
-def create_vending_machine(data):
-    name, location = data.get('name'), data.get('location')
-    new_vending_machine = VendingMachine(name=name, location=location)
-    db.session.add(new_vending_machine)
-    db.session.commit()
-    return {'status': 'OK'}, 200
 
 
 # Product
