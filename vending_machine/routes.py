@@ -7,6 +7,7 @@ from .models import (VendingMachine, Product, db)
 def check_required_fields(actual_fields, required_fields):
     return not actual_fields or not (required_fields <= actual_fields.keys())
 
+
 # Vending machine
 @app.route('/vending_machine')
 def list_vending_machine():
@@ -14,43 +15,51 @@ def list_vending_machine():
     return jsonify({"vending_machine": results})
 
 
-@app.route('/vending_machine', methods=['POST', 'PUT'])
-def create_vending_machine():
-    if request.method not in ['POST', 'PUT']:
+@app.route('/vending_machine', methods=['POST', 'PUT', 'DELETE'])
+def modify_vending_machine():
+    if request.method not in ['POST', 'PUT', 'DELETE']:
         return make_response(jsonify({'status': 'Bad Request'}), 400)
 
+    required_fields_of_requests = {'POST': {'name', 'location'}, 'PUT': {'id'}, 'DELETE': {'id'}}
     data: dict = request.get_json()
-    required_fields = {'name', 'location'} if request.method == 'POST' else {'id'}
+    required_fields = required_fields_of_requests[request.method]
     if check_required_fields(data, required_fields):
-        return make_response(jsonify({'status': 'bad request'}), 400)
-    if request.method == 'POST':
-        # Create vending machine
-        name, location = data.get('name'), data.get('location')
-        new_vending_machine = VendingMachine(name=name, location=location)
-        db.session.add(new_vending_machine)
-    elif request.method == 'PUT':
-        # Update vending machine
-        id, name, location = data.get('id'), data.get('name'), data.get('location')
-        vending_machine = VendingMachine.query.filter_by(id=id).first()
-        if name is not None: vending_machine.name = name
-        if location is not None: vending_machine.location = name
-        db.session.commit()
-    return jsonify({"status": "OK"})
+        status, status_code = {'status': 'bad request'}, 400
+    elif request.method == 'POST':  # Create vending machine
+        status, status_code = create_vending_machine(data)
+    elif request.method == 'PUT':  # Update vending machine
+        status, status_code = update_vending_machine(data)
+    elif request.method == 'DELETE':  # Delete vending machine
+        status, status_code = delete_vending_machine(data)
+    return make_response(jsonify(status), status_code)
 
 
-@app.route('/vending_machine', methods=['DELETE'])
-def delete_vending_machine():
-    data: dict = request.get_json()
-    required_fields = set(['id'])
-    if check_required_fields(data, required_fields):
-        return make_response(jsonify({'status': 'Bad Request'}), 400)
+def delete_vending_machine(data):
     id = data.get('id')
     vending_machine = VendingMachine.query.filter_by(id=id).first()
     if vending_machine is None:
-        return make_response(jsonify({'status': 'Bad Request'}), 400)
+        return {'status': 'Bad Request'}, 400
     db.session.delete(vending_machine)
     db.session.commit()
-    return jsonify({"status": "OK"})
+    return {'status': 'OK'}, 200
+
+
+def update_vending_machine(data):
+    id, name, location = data.get('id'), data.get('name'), data.get('location')
+    vending_machine = VendingMachine.query.filter_by(id=id).first()
+    if vending_machine is None:
+        return {'status': 'Bad Request'}, 400
+    if name is not None: vending_machine.name = name
+    if location is not None: vending_machine.location = name
+    db.session.commit()
+    return {'status': 'OK'}, 200
+
+
+def create_vending_machine(data):
+    name, location = data.get('name'), data.get('location')
+    new_vending_machine = VendingMachine(name=name, location=location)
+    db.session.add(new_vending_machine)
+    return {'status': 'OK'}, 200
 
 
 # Product
